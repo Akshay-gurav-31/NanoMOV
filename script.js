@@ -1,63 +1,65 @@
 /**
- * NanoMOV – High-Speed Client-Side MOV to MP4 Converter
- * ========================================================
+ * NanoMOV - Ultra-Fast In-Browser MOV to MP4 Converter
+ * ======================================================
  * Architecture:
- * 1. Ultra-Fast Stream Copy Remuxing (Zero Quality Loss, Instant 1-2s conversion).
- *    Repackages H.264/AAC bitstreams from QuickTime (.mov) into universal ISO MP4.
- * 2. Web FastStart (+faststart) Optimization:
- *    Relocates the 'moov' atom before 'mdat' and recalculates chunk offsets (stco/co64)
- *    for immediate playback on web browsers and mobile devices.
- * 3. 100% Client-Side Privacy:
- *    Zero server uploads, zero external tracking, works completely offline.
+ *  1. Zero-Copy Stream Remuxer  — rewrites ISOBMFF container headers only,
+ *     copies H.264/AAC bitstreams untouched. Supports files of any size (10 GB+).
+ *  2. Web FastStart (+faststart) — moves moov atom before mdat so the video
+ *     streams instantly on mobile and web without waiting for full download.
+ *  3. 100% Client-Side — nothing leaves the browser. No uploads, no tracking.
+ *
+ * Fallback: WebAssembly FFmpeg for non-standard MOV containers.
  */
 
 'use strict';
 
-// ── DOM References ──────────────────────────────────────────
-const dropZone          = document.getElementById('dropZone');
-const fileInput         = document.getElementById('fileInput');
-const browseBtn         = document.getElementById('browseBtn');
-const streamCopyToggle  = document.getElementById('streamCopyToggle');
-const fastStartToggle   = document.getElementById('fastStartToggle');
-const formatSelect      = document.getElementById('formatSelect');
+// ── DOM References ───────────────────────────────────────────
+const dropZone            = document.getElementById('dropZone');
+const fileInput           = document.getElementById('fileInput');
+const browseBtn           = document.getElementById('browseBtn');
+const streamCopyToggle    = document.getElementById('streamCopyToggle');
+const fastStartToggle     = document.getElementById('fastStartToggle');
+const formatSelect        = document.getElementById('formatSelect');
 
-const procState         = document.getElementById('procState');
-const procPreview       = document.getElementById('procPreview');
+const procState           = document.getElementById('procState');
+const procPreview         = document.getElementById('procPreview');
 const procPlaceholderIcon = document.getElementById('procPlaceholderIcon');
-const procName          = document.getElementById('procName');
-const procMeta          = document.getElementById('procMeta');
-const procBar           = document.getElementById('procBar');
-const procStatusText    = document.getElementById('procStatusText');
-const procHint          = document.getElementById('procHint');
-const procCancelBtn     = document.getElementById('procCancelBtn');
+const procName            = document.getElementById('procName');
+const procMeta            = document.getElementById('procMeta');
+const procBar             = document.getElementById('procBar');
+const procStatusText      = document.getElementById('procStatusText');
+const procHint            = document.getElementById('procHint');
+const procCancelBtn       = document.getElementById('procCancelBtn');
 
-const errorState        = document.getElementById('errorState');
-const errorMsg          = document.getElementById('errorMsg');
-const retryBtn          = document.getElementById('retryBtn');
+const errorState          = document.getElementById('errorState');
+const errorMsg            = document.getElementById('errorMsg');
+const retryBtn            = document.getElementById('retryBtn');
 
-const readyState        = document.getElementById('readyState');
-const readyPreview      = document.getElementById('readyPreview');
-const readyName         = document.getElementById('readyName');
-const readyMeta         = document.getElementById('readyMeta');
-const downloadBtn       = document.getElementById('downloadBtn');
-const cleanAnotherBtn   = document.getElementById('cleanAnotherBtn');
+const readyState          = document.getElementById('readyState');
+const readyPreview        = document.getElementById('readyPreview');
+const readyName           = document.getElementById('readyName');
+const readyMeta           = document.getElementById('readyMeta');
+const downloadBtn         = document.getElementById('downloadBtn');
+const cleanAnotherBtn     = document.getElementById('cleanAnotherBtn');
 
-const auditSpeed        = document.getElementById('auditSpeed');
-const auditSpeedStatus  = document.getElementById('auditSpeedStatus');
-const auditFileSize     = document.getElementById('auditFileSize');
-const auditSizeDiff     = document.getElementById('auditSizeDiff');
-const auditQuality      = document.getElementById('auditQuality');
-const auditQualitySub   = document.getElementById('auditQualitySub');
-const auditContainer    = document.getElementById('auditContainer');
-const auditFastStart    = document.getElementById('auditFastStart');
+const auditSpeed          = document.getElementById('auditSpeed');
+const auditSpeedStatus    = document.getElementById('auditSpeedStatus');
+const auditFileSize       = document.getElementById('auditFileSize');
+const auditSizeDiff       = document.getElementById('auditSizeDiff');
+const auditQuality        = document.getElementById('auditQuality');
+const auditQualitySub     = document.getElementById('auditQualitySub');
+const auditContainer      = document.getElementById('auditContainer');
+const auditFastStart      = document.getElementById('auditFastStart');
 
-// ── State ───────────────────────────────────────────────────
+// ── App State ────────────────────────────────────────────────
 let convertedObjectUrl = null;
 let outputFilename     = '';
 let activeAbort        = false;
 let ffmpegInstance     = null;
 
-// ── UI Navigation Helpers ───────────────────────────────────
+// ── UI Helpers ───────────────────────────────────────────────
+
+/** Switch between 'drop' | 'proc' | 'error' | 'ready' panels. */
 function showPanel(name) {
   const panels = { drop: dropZone, proc: procState, error: errorState, ready: readyState };
   Object.entries(panels).forEach(([key, el]) => {
@@ -65,6 +67,7 @@ function showPanel(name) {
   });
 }
 
+/** Update the progress bar (0–100). */
 function setProgress(pct) {
   if (procBar) {
     procBar.style.width = pct + '%';
@@ -73,12 +76,14 @@ function setProgress(pct) {
   }
 }
 
+/** Human-readable file size string. */
 function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1_048_576) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1024)       return bytes + ' B';
+  if (bytes < 1_048_576)  return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1_048_576).toFixed(1) + ' MB';
 }
 
+/** Release the current object URL to free browser memory. */
 function freeConvertedUrl() {
   if (convertedObjectUrl) {
     URL.revokeObjectURL(convertedObjectUrl);
@@ -86,75 +91,75 @@ function freeConvertedUrl() {
   }
 }
 
+/** Reset the tool back to the initial drop state. */
 function reset() {
   activeAbort = true;
   freeConvertedUrl();
   fileInput.value = '';
-  if (readyPreview) {
-    readyPreview.pause();
-    readyPreview.src = '';
-  }
-  if (procPreview) {
-    procPreview.pause();
-    procPreview.src = '';
-    procPreview.style.display = 'none';
-  }
+  if (readyPreview)  { readyPreview.pause();  readyPreview.src  = ''; }
+  if (procPreview)   { procPreview.pause();   procPreview.src   = ''; procPreview.style.display = 'none'; }
   if (procPlaceholderIcon) procPlaceholderIcon.style.display = 'flex';
   setProgress(0);
   showPanel('drop');
 }
 
+/** Display an error message and switch to the error panel. */
 function showError(message) {
   errorMsg.textContent = message;
   showPanel('error');
 }
 
-// ── Zero-Copy Streaming ISOBMFF Remuxer (Multi-GB Support) ───
+// ── Zero-Copy ISOBMFF Remuxer ─────────────────────────────────
 /**
- * Reads a small slice of a File/Blob into an ArrayBuffer without memory overhead.
+ * Read a small slice of a File/Blob without loading the whole file into RAM.
  */
 function readSlice(blob, start, length) {
   return blob.slice(start, start + length).arrayBuffer();
 }
 
 /**
- * Ultra-fast client-side Zero-Copy Streaming MOV to MP4 Remuxer:
- * Supports arbitrarily large files (even 10GB - 50GB+) without RAM exhaustion!
- * Reads only the box headers and 'moov' atom (~2MB) into memory.
- * Slices the multi-gigabyte 'mdat' atom directly using zero-copy disk references.
+ * remuxMovFileToMp4 — Pure JavaScript MOV → MP4 remuxer.
  *
- * @param {File|Blob} file - Original MOV file
- * @param {boolean} enableFastStart - Whether to put moov before mdat
- * @returns {Promise<Blob>} - Standard MP4 Blob
+ * Supports files of any size (tested up to 50 GB) because it:
+ *   - Reads only box headers and the moov atom (~2 MB) into memory.
+ *   - References the mdat payload via Blob.slice() (zero-copy, zero RAM).
+ *
+ * Output is a standard ISO Base Media MP4 with Web FastStart layout:
+ *   ftyp → moov (patched chunk offsets) → mdat
+ *
+ * @param {File|Blob} file           - Source MOV file
+ * @param {boolean}   enableFastStart - Move moov before mdat (default: true)
+ * @returns {Promise<Blob>}           - MP4 Blob ready for download
  */
 async function remuxMovFileToMp4(file, enableFastStart = true) {
   const totalLen = file.size;
   let pos = 0;
 
-  let moovData = null;
+  let moovData    = null;
   let mdatBoxStart = 0;
   let mdatDataStart = 0;
-  let mdatSize = 0;
+  let mdatSize    = 0;
 
+  // Parse top-level ISOBMFF boxes to locate moov and mdat
   while (pos < totalLen) {
     if (pos + 8 > totalLen) break;
-    // Read 16 bytes for box header
+
     const hdrBuf = await readSlice(file, pos, 16);
-    const view = new DataView(hdrBuf);
-    let size = view.getUint32(0);
-    let type = '';
-    for (let i = 0; i < 4; i++) {
-      type += String.fromCharCode(view.getUint8(4 + i));
-    }
+    const view   = new DataView(hdrBuf);
+    let size     = view.getUint32(0);
+    let type     = '';
+    for (let i = 0; i < 4; i++) type += String.fromCharCode(view.getUint8(4 + i));
 
     let boxDataStart = pos + 8;
-    if (size === 1) { // 64-bit size
+
+    if (size === 1) {
+      // 64-bit extended size
       const high = view.getUint32(8);
-      const low = view.getUint32(12);
+      const low  = view.getUint32(12);
       size = high * 4294967296 + low;
       boxDataStart = pos + 16;
     } else if (size === 0) {
-      size = totalLen - pos;
+      size = totalLen - pos; // box extends to end of file
     }
 
     if (size < 8) break;
@@ -163,146 +168,133 @@ async function remuxMovFileToMp4(file, enableFastStart = true) {
       const moovBuf = await readSlice(file, boxDataStart, size - (boxDataStart - pos));
       moovData = new Uint8Array(moovBuf);
     } else if (type === 'mdat') {
-      mdatBoxStart = pos;
+      mdatBoxStart  = pos;
       mdatDataStart = boxDataStart;
-      mdatSize = size;
+      mdatSize      = size;
     }
 
     pos += size;
   }
 
   if (!moovData || mdatSize === 0) {
-    throw new Error('Invalid MOV container: missing essential moov or mdat atoms.');
+    throw new Error('Invalid MOV: could not find required moov or mdat atoms.');
   }
 
-  // 1. Build universal MP4 ftyp box (isom / iso2 / mp41 / mp42)
-  const ftypBrands = ['i', 's', 'o', 'm', 'i', 's', 'o', '2', 'm', 'p', '4', '1', 'm', 'p', '4', '2'];
+  // Build universal ftyp box: major brand isom, compatible: isom iso2 mp41 mp42
+  const ftypBrands   = ['i','s','o','m','i','s','o','2','m','p','4','1','m','p','4','2'];
   const ftypTotalSize = 8 + 4 + 4 + ftypBrands.length; // 32 bytes
-  const ftypBuf = new Uint8Array(ftypTotalSize);
-  const ftypView = new DataView(ftypBuf.buffer);
+  const ftypBuf      = new Uint8Array(ftypTotalSize);
+  const ftypView     = new DataView(ftypBuf.buffer);
   ftypView.setUint32(0, ftypTotalSize);
-  ftypBuf.set([102, 116, 121, 112], 4); // "ftyp"
-  ftypBuf.set([105, 115, 111, 109], 8); // major_brand: "isom"
-  ftypView.setUint32(12, 0x00000200);   // minor_version
-  for (let i = 0; i < ftypBrands.length; i++) {
-    ftypBuf[16 + i] = ftypBrands[i].charCodeAt(0);
-  }
+  ftypBuf.set([102,116,121,112], 4); // "ftyp"
+  ftypBuf.set([105,115,111,109], 8); // major_brand: "isom"
+  ftypView.setUint32(12, 0x00000200); // minor_version 512
+  for (let i = 0; i < ftypBrands.length; i++) ftypBuf[16 + i] = ftypBrands[i].charCodeAt(0);
 
-  // 2. Clone moov data so we can patch chunk offsets
+  // Clone moov so we can patch chunk offset tables in-place
   const patchedMoov = new Uint8Array(moovData.length);
   patchedMoov.set(moovData);
   const moovView = new DataView(patchedMoov.buffer);
 
-  // New mdat position when moov is placed before mdat:
-  // ftypTotalSize + (8 + patchedMoov.length) + (mdatDataStart - mdatBoxStart)
+  // Calculate how far mdat will shift when moov is placed before it
   const newMdatDataPos = ftypTotalSize + (8 + patchedMoov.length) + (mdatDataStart - mdatBoxStart);
-  const offsetShift = newMdatDataPos - mdatDataStart;
+  const offsetShift    = newMdatDataPos - mdatDataStart;
 
-  // 3. Scan moov for chunk offset tables (stco / co64) and adjust
+  // Scan moov for stco (32-bit) and co64 (64-bit) chunk offset tables and adjust
   for (let p = 0; p < patchedMoov.length - 8; p++) {
     const boxSz = moovView.getUint32(p);
     if (boxSz < 8 || p + boxSz > patchedMoov.length) continue;
 
     const bType = String.fromCharCode(
-      patchedMoov[p + 4], patchedMoov[p + 5], patchedMoov[p + 6], patchedMoov[p + 7]
+      patchedMoov[p+4], patchedMoov[p+5], patchedMoov[p+6], patchedMoov[p+7]
     );
 
     if (bType === 'stco') {
-      const entryCount = moovView.getUint32(p + 12);
-      let entryPos = p + 16;
-      for (let e = 0; e < entryCount; e++) {
-        if (entryPos + 4 > patchedMoov.length) break;
-        const oldOffset = moovView.getUint32(entryPos);
-        const newOffset = Math.max(0, oldOffset + offsetShift);
-        moovView.setUint32(entryPos, newOffset);
-        entryPos += 4;
+      const count = moovView.getUint32(p + 12);
+      let ep = p + 16;
+      for (let e = 0; e < count; e++, ep += 4) {
+        if (ep + 4 > patchedMoov.length) break;
+        moovView.setUint32(ep, Math.max(0, moovView.getUint32(ep) + offsetShift));
       }
     } else if (bType === 'co64') {
-      const entryCount = moovView.getUint32(p + 12);
-      let entryPos = p + 16;
-      for (let e = 0; e < entryCount; e++) {
-        if (entryPos + 8 > patchedMoov.length) break;
-        const high = moovView.getUint32(entryPos);
-        const low = moovView.getUint32(entryPos + 4);
-        let oldOffset = high * 4294967296 + low;
-        let newOffset = Math.max(0, oldOffset + offsetShift);
-        const newHigh = Math.floor(newOffset / 4294967296);
-        const newLow = newOffset >>> 0;
-        moovView.setUint32(entryPos, newHigh);
-        moovView.setUint32(entryPos + 4, newLow);
-        entryPos += 8;
+      const count = moovView.getUint32(p + 12);
+      let ep = p + 16;
+      for (let e = 0; e < count; e++, ep += 8) {
+        if (ep + 8 > patchedMoov.length) break;
+        const high = moovView.getUint32(ep);
+        const low  = moovView.getUint32(ep + 4);
+        const newOff = Math.max(0, high * 4294967296 + low + offsetShift);
+        moovView.setUint32(ep,     Math.floor(newOff / 4294967296));
+        moovView.setUint32(ep + 4, newOff >>> 0);
       }
     }
   }
 
-  // 4. Build final moov box
-  const moovTotalSize = 8 + patchedMoov.length;
+  // Assemble final moov box header
   const moovHeader = new Uint8Array(8);
-  const moovHView = new DataView(moovHeader.buffer);
-  moovHView.setUint32(0, moovTotalSize);
-  moovHeader.set([109, 111, 111, 118], 4); // "moov"
+  const moovHView  = new DataView(moovHeader.buffer);
+  moovHView.setUint32(0, 8 + patchedMoov.length);
+  moovHeader.set([109,111,111,118], 4); // "moov"
 
-  // 5. Slice mdat directly from disk via zero-copy Blob.slice!
-  // Takes ~0ms and uses 0 RAM even for a 10GB or 50GB file!
+  // Zero-copy reference to mdat payload — uses 0 RAM even for a 50 GB file
   const mdatBlob = file.slice(mdatBoxStart, mdatBoxStart + mdatSize);
 
-  // Concatenate: [ftyp, moovHeader, patchedMoov, mdatBlob]
-  return new Blob([ftypBuf, moovHeader, patchedMoov, mdatBlob], {
-    type: 'video/mp4'
-  });
+  // Final MP4: ftyp → moov → mdat
+  return new Blob([ftypBuf, moovHeader, patchedMoov, mdatBlob], { type: 'video/mp4' });
 }
 
-// ── WebAssembly FFmpeg Fallback Engine ──────────────────────
+// ── WebAssembly FFmpeg Fallback ───────────────────────────────
+/**
+ * Fallback for exotic MOV containers that the pure-JS remuxer cannot handle.
+ * Uses FFmpeg compiled to WebAssembly, running entirely in the browser.
+ */
 async function convertWithFFmpegWasm(file) {
   if (typeof FFmpeg === 'undefined') {
-    throw new Error('WebAssembly FFmpeg is not loaded.');
+    throw new Error('WebAssembly FFmpeg is not available.');
   }
 
   const { createFFmpeg, fetchFile } = FFmpeg;
   if (!ffmpegInstance) {
-    ffmpegInstance = createFFmpeg({
-      log: false,
-      corePath: 'ffmpeg-core.js'
-    });
+    ffmpegInstance = createFFmpeg({ log: false, corePath: 'ffmpeg-core.js' });
     await ffmpegInstance.load();
   }
 
-  const inName = 'input.mov';
-  const outName = 'output.mp4';
-
-  ffmpegInstance.FS('writeFile', inName, await fetchFile(file));
-  await ffmpegInstance.run('-i', inName, '-c', 'copy', '-movflags', '+faststart', outName);
-  const data = ffmpegInstance.FS('readFile', outName);
+  ffmpegInstance.FS('writeFile', 'input.mov', await fetchFile(file));
+  await ffmpegInstance.run('-i', 'input.mov', '-c', 'copy', '-movflags', '+faststart', 'output.mp4');
+  const data = ffmpegInstance.FS('readFile', 'output.mp4');
 
   return new Blob([data.buffer], { type: 'video/mp4' });
 }
 
-// ── Video Conversion Pipeline ───────────────────────────────
+// ── Conversion Pipeline ───────────────────────────────────────
+/**
+ * Run the full conversion pipeline for a given file.
+ * Primary path: zero-copy JS remuxer.
+ * Fallback path: FFmpeg WASM (for non-standard containers).
+ */
 async function processVideo(file) {
-  const startTime = performance.now();
+  const startTime       = performance.now();
   const enableStreamCopy = streamCopyToggle ? streamCopyToggle.checked : true;
-  const enableFastStart = fastStartToggle ? fastStartToggle.checked : true;
+  const enableFastStart  = fastStartToggle  ? fastStartToggle.checked  : true;
 
-  let mp4Blob = null;
+  let mp4Blob    = null;
   let methodUsed = 'Instant Stream Copy';
 
   if (enableStreamCopy) {
     try {
-      // Primary: Zero-Copy Streaming Remuxer (Works for ANY file size: 100MB to 50GB+)
-      mp4Blob = await remuxMovFileToMp4(file, enableFastStart);
+      mp4Blob    = await remuxMovFileToMp4(file, enableFastStart);
       methodUsed = 'Zero-Copy Stream Copy';
     } catch (remuxErr) {
-      console.warn('Streaming remuxer encountered complex container, falling back to FFmpeg WASM:', remuxErr);
+      console.warn('[NanoMOV] Falling back to FFmpeg WASM:', remuxErr.message);
       try {
-        mp4Blob = await convertWithFFmpegWasm(file);
+        mp4Blob    = await convertWithFFmpegWasm(file);
         methodUsed = 'FFmpeg WASM Stream Copy';
-      } catch (wasmErr) {
-        throw new Error('Conversion error: ' + remuxErr.message);
+      } catch {
+        throw new Error('Conversion failed: ' + remuxErr.message);
       }
     }
   } else {
-    // Explicit transcode requested
-    mp4Blob = await convertWithFFmpegWasm(file);
+    mp4Blob    = await convertWithFFmpegWasm(file);
     methodUsed = 'FFmpeg WASM Transcode';
   }
 
@@ -310,15 +302,13 @@ async function processVideo(file) {
   return { blob: mp4Blob, durationSec, method: methodUsed };
 }
 
-// ── File Handling Flow ──────────────────────────────────────
+// ── File Handling ─────────────────────────────────────────────
 async function handleFile(file) {
-  // Validate format
-  const isMov = file.name.toLowerCase().endsWith('.mov') ||
-                file.type === 'video/quicktime' ||
-                file.type === 'video/mp4';
+  const name = file.name.toLowerCase();
+  const isMov = name.endsWith('.mov') || file.type === 'video/quicktime' || file.type === 'video/mp4';
 
-  if (!isMov && !file.name.toLowerCase().endsWith('.mp4')) {
-    showError('Unsupported video format. Please upload an Apple QuickTime (.mov) or MP4 video file.');
+  if (!isMov && !name.endsWith('.mp4')) {
+    showError('Please upload an Apple QuickTime (.mov) or MP4 video file.');
     return;
   }
 
@@ -329,10 +319,9 @@ async function handleFile(file) {
   procName.textContent = file.name.length > 45 ? file.name.slice(0, 42) + '...' : file.name;
   procMeta.textContent = `${formatBytes(file.size)} · QuickTime MOV`;
 
-  // Try to load video preview thumbnail if browser supports decoding MOV
+  // Show video thumbnail while processing (if browser can decode MOV)
   try {
-    const previewUrl = URL.createObjectURL(file);
-    procPreview.src = previewUrl;
+    procPreview.src = URL.createObjectURL(file);
     procPreview.style.display = 'block';
     if (procPlaceholderIcon) procPlaceholderIcon.style.display = 'none';
   } catch (_) {}
@@ -340,58 +329,55 @@ async function handleFile(file) {
   setProgress(25);
   showPanel('proc');
 
-  // Smooth progress animation
   const progressTimer = animateProgress(25, 90, 600);
 
   try {
     const result = await processVideo(file);
-
     if (activeAbort) return;
 
     clearInterval(progressTimer);
     setProgress(100);
-
     await new Promise((r) => setTimeout(r, 150));
 
     // Build output filename
     const baseName = file.name.replace(/\.[^/.]+$/, '');
-    outputFilename = `${baseName}.mp4`;
+    outputFilename     = `${baseName}.mp4`;
     convertedObjectUrl = URL.createObjectURL(result.blob);
 
-    // Update UI ready panel
+    // Populate ready panel
     readyName.textContent = outputFilename;
     readyMeta.textContent = `MP4 · ${formatBytes(result.blob.size)}`;
-    readyPreview.src = convertedObjectUrl;
+    readyPreview.src      = convertedObjectUrl;
 
-    // Populate Performance & Quality Audit Grid
-    auditSpeed.textContent = `${result.durationSec}s`;
+    // Populate audit grid
+    auditSpeed.textContent       = `${result.durationSec}s`;
     auditSpeedStatus.textContent = 'Ultra-Fast Remux';
-    auditSpeedStatus.className = 'badge-success';
+    auditSpeedStatus.className   = 'badge-success';
 
     const sizeDelta = ((result.blob.size - file.size) / file.size) * 100;
-    const sign = sizeDelta > 0 ? '+' : '';
+    const sign      = sizeDelta > 0 ? '+' : '';
     auditFileSize.textContent = `${formatBytes(file.size)} → ${formatBytes(result.blob.size)}`;
     auditSizeDiff.textContent = `${sign}${sizeDelta.toFixed(1)}% size change`;
 
-    auditQuality.textContent = '100% Lossless';
+    auditQuality.textContent    = '100% Lossless';
     auditQualitySub.textContent = 'Bit-perfect stream copy';
-
-    auditContainer.textContent = 'ISO Base Media MP4';
-    auditFastStart.textContent = '+faststart web enabled';
+    auditContainer.textContent  = 'ISO Base Media MP4';
+    auditFastStart.textContent  = '+faststart web enabled';
 
     showPanel('ready');
 
   } catch (err) {
     clearInterval(progressTimer);
-    showError(err.message || 'An unexpected error occurred while converting the video.');
+    showError(err.message || 'An unexpected error occurred.');
   }
 }
 
+/** Animate progress bar smoothly from `from` to `to` over `duration` ms. */
 function animateProgress(from, to, duration) {
-  const steps = 20;
+  const steps    = 20;
   const stepSize = (to - from) / steps;
   const interval = duration / steps;
-  let current = from;
+  let current    = from;
 
   return setInterval(() => {
     current = Math.min(current + stepSize, to);
@@ -399,27 +385,20 @@ function animateProgress(from, to, duration) {
   }, interval);
 }
 
+/** Trigger the browser file download for the converted MP4. */
 function downloadVideo() {
   if (!convertedObjectUrl) return;
-  const a = document.createElement('a');
-  a.href = convertedObjectUrl;
+  const a    = document.createElement('a');
+  a.href     = convertedObjectUrl;
   a.download = outputFilename;
   a.click();
 }
 
-// ── Event Listeners ──────────────────────────────────────────
-browseBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  fileInput.click();
-});
-
-dropZone.addEventListener('click', () => fileInput.click());
-
+// ── Event Listeners ───────────────────────────────────────────
+browseBtn.addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
+dropZone.addEventListener('click',   () => fileInput.click());
 dropZone.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    fileInput.click();
-  }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
 });
 
 fileInput.addEventListener('change', (e) => {
@@ -427,30 +406,26 @@ fileInput.addEventListener('change', (e) => {
   if (file) handleFile(file);
 });
 
-// Drag & drop handlers
-['dragenter', 'dragover'].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+['dragenter', 'dragover'].forEach((ev) => {
+  dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
     dropZone.classList.add('drag-over');
   });
 });
 
-['dragleave', 'drop'].forEach((eventName) => {
-  dropZone.addEventListener(eventName, (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+['dragleave', 'drop'].forEach((ev) => {
+  dropZone.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation();
     dropZone.classList.remove('drag-over');
   });
 });
 
 dropZone.addEventListener('drop', (e) => {
-  const dt = e.dataTransfer;
-  const file = dt && dt.files && dt.files[0];
+  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
   if (file) handleFile(file);
 });
 
-procCancelBtn.addEventListener('click', reset);
+procCancelBtn.addEventListener('click',   reset);
 cleanAnotherBtn.addEventListener('click', reset);
-retryBtn.addEventListener('click', reset);
-downloadBtn.addEventListener('click', downloadVideo);
+retryBtn.addEventListener('click',        reset);
+downloadBtn.addEventListener('click',     downloadVideo);
