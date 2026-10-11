@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" alt="NanoMOV Logo" width="120" height="120">
+  <img src="logo.png" alt="NanoMOV Logo" width="130">
 </p>
 
 <h1 align="center">NanoMOV</h1>
