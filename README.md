@@ -117,10 +117,10 @@ Input → [Strip Metadata] → [96% Resize Cycle] → [Film Grain]
 Requires Python 3 and FFmpeg:
 
 ```bash
-python test_mov_converter.py    # MOV→MP4 remuxer + faststart + codecs
-python test_metadata_audit.py   # EXIF/metadata pipeline
-python test_isobmff_remux.py    # ISOBMFF box parsing
-python test_streaming_remux.py  # Large file chunk streaming
+python tests/test_mov_converter.py    # MOV→MP4 remuxer + faststart + codecs
+python tests/test_metadata_audit.py   # EXIF/metadata pipeline
+python tests/test_isobmff_remux.py    # ISOBMFF box parsing
+python tests/test_streaming_remux.py  # Large file chunk streaming
 ```
 
 ---
