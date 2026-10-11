@@ -22,7 +22,7 @@ for i in range(num_frames):
     cv2.circle(frame, (cx, cy), 35, (0, 180, 245), -1) # Amber gold
     
     # Draw text
-    cv2.putText(frame, "CleanMOV -> MP4 Fast Converter", (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (30, 30, 30), 2)
+    cv2.putText(frame, "NanoMOV -> MP4 Fast Converter", (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (30, 30, 30), 2)
     cv2.putText(frame, f"Frame {i+1}/{num_frames} - 30 FPS", (60, 300), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (100, 100, 100), 1)
     
     out.write(frame)

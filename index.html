@@ -50,33 +50,6 @@
     <!-- ===== Main Tool Card ===== -->
     <main class="card" id="toolCard">
 
-      <!-- Settings Bar -->
-      <div class="settings-bar" id="settingsBar" aria-label="Conversion settings">
-        <label class="setting-item">
-          <input type="checkbox" id="streamCopyToggle" checked>
-          <span class="setting-text">
-            <strong>Ultra-Fast Remux (Stream Copy)</strong>
-            <small>Converts in 1-2s with 100% lossless video &amp; audio</small>
-          </span>
-        </label>
-        <div class="setting-divider" aria-hidden="true"></div>
-        <label class="setting-item">
-          <input type="checkbox" id="fastStartToggle" checked>
-          <span class="setting-text">
-            <strong>Web FastStart (+faststart)</strong>
-            <small>Optimizes MP4 for instant web &amp; mobile playback</small>
-          </span>
-        </label>
-        <div class="setting-divider" aria-hidden="true"></div>
-        <div class="setting-item format-item">
-          <label for="formatSelect" class="setting-label">Output Format:</label>
-          <select id="formatSelect" aria-label="Output format">
-            <option value="mp4" selected>MP4 (Standard ISO)</option>
-            <option value="mp4-h264">MP4 (Universal H.264)</option>
-          </select>
-        </div>
-      </div>
-
       <!-- Drop zone – visible by default -->
       <div class="drop" id="dropZone" role="button" tabindex="0" aria-label="Upload MOV video">
         <input type="file" id="fileInput" accept=".mov,video/quicktime,video/mp4" hidden aria-hidden="true">
@@ -287,7 +260,7 @@
           </div>
           <h3>1. Stream Remuxing vs. Transcoding</h3>
           <p>
-            Standard converters decode every single pixel and re-encode with lossy compression. CleanMOV simply rewrites the container wrapper atoms (`ftyp`, `moov`, `mdat`) and copies raw H.264/AAC packets, finishing in seconds with zero CPU bottleneck.
+            Standard converters decode every single pixel and re-encode with lossy compression. NanoMOV simply rewrites the container wrapper atoms (`ftyp`, `moov`, `mdat`) and copies raw H.264/AAC packets, finishing in seconds with zero CPU bottleneck.
           </p>
         </div>
 
@@ -300,7 +273,7 @@
           </div>
           <h3>2. Web FastStart (+faststart) Optimization</h3>
           <p>
-            Apple QuickTime files often place the metadata (`moov` box) at the end of the file. CleanMOV relocates `moov` to the beginning of the file, allowing immediate playback on iPhones, Android, Chrome, and social networks without waiting for full download.
+            Apple QuickTime files often place the metadata (`moov` box) at the end of the file. NanoMOV relocates `moov` to the beginning of the file, allowing immediate playback on iPhones, Android, Chrome, and social networks without waiting for full download.
           </p>
         </div>
 

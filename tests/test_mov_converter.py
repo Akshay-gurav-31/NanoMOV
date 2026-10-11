@@ -1,5 +1,5 @@
 """
-Automated Verification Suite for CleanMOV (Fast MOV to MP4 Converter)
+Automated Verification Suite for NanoMOV (Fast MOV to MP4 Converter)
 ======================================================================
 Validates:
 1. Fast ISOBMFF Stream Copy Remuxing.
