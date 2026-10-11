@@ -42,8 +42,8 @@
         Fast &amp; on your <span class="accent">device.</span><span class="cursor" aria-hidden="true"></span>
       </h1>
       <p class="sub">
-        Lightning-fast stream remuxing directly in your browser.<br>
-        100% private &middot; Zero quality loss &middot; No server uploads.
+        Convert MOV videos to MP4 in seconds directly in your browser.<br>
+        100% private &middot; Zero quality loss &middot; No file size limits.
       </p>
     </section>
 
@@ -90,13 +90,13 @@
           <div class="meta"  id="procMeta">0 MB &middot; QuickTime</div>
           <div class="status">
             <span class="spinner" aria-hidden="true"></span>
-            <span id="procStatusText">Remuxing video packets to MP4...</span>
+            <span id="procStatusText">Converting video to MP4...</span>
           </div>
           <div class="bar" role="progressbar" aria-valuenow="0"
                aria-valuemin="0" aria-valuemax="100" aria-label="Conversion progress">
             <i id="procBar" style="width:0%"></i>
           </div>
-          <div class="hint" id="procHint">Ultra-fast stream copy &mdash; this takes just a moment.</div>
+          <div class="hint" id="procHint">Please wait, your video will be ready in a moment.</div>
         </div>
         <button class="btn-close" id="procCancelBtn" type="button" aria-label="Cancel">
           <svg viewBox="0 0 24 24" fill="none" stroke="#111827"
@@ -115,7 +115,7 @@
         </svg>
         <div>
           <div class="error-title">Could not convert video</div>
-          <div class="error-msg" id="errorMsg">An unexpected error occurred.</div>
+          <div class="error-msg" id="errorMsg">Please select a valid .mov video file and try again.</div>
           <button class="btn-retry" id="retryBtn" type="button">Try another video</button>
         </div>
       </div>
@@ -141,7 +141,7 @@
                 <path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#fff"
                       stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Your MP4 video is ready.
+              Your MP4 is ready!
             </div>
             <div class="fname" id="readyName">video.mp4</div>
             <div class="meta"  id="readyMeta">MP4 &middot; 0 MB</div>
@@ -164,46 +164,6 @@
             </button>
           </div>
         </div>
-
-        <!-- Performance & Verification Audit Grid -->
-        <div class="audit-card">
-          <div class="audit-row">
-            <div class="audit-col">
-              <span class="audit-lbl">Conversion Speed</span>
-              <strong id="auditSpeed">0.2s</strong>
-              <span class="badge-success" id="auditSpeedStatus">Instant Remux</span>
-            </div>
-            <div class="audit-col">
-              <span class="audit-lbl">File Size</span>
-              <strong id="auditFileSize">0 MB → 0 MB</strong>
-              <span class="audit-sub" id="auditSizeDiff">0.0% delta</span>
-            </div>
-            <div class="audit-col">
-              <span class="audit-lbl">Video Quality</span>
-              <strong id="auditQuality">100% Lossless</strong>
-              <span class="audit-sub" id="auditQualitySub">Bit-perfect stream copy</span>
-            </div>
-            <div class="audit-col">
-              <span class="audit-lbl">Container &amp; FastStart</span>
-              <strong id="auditContainer">ISO Base Media MP4</strong>
-              <span class="audit-sub" id="auditFastStart">+faststart web enabled</span>
-            </div>
-          </div>
-
-          <div class="privacy-disclaimer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            <div>
-              <strong>Stream Copy Architecture:</strong>
-              <span>
-                MOV and MP4 both use the standard MPEG-4 / ISO Base Media format. NanoMOV directly repackages your video and audio bitstreams into a universal MP4 container without re-compressing frames. This ensures 100% preservation of original quality at maximum hardware speed.
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
     </main><!-- /#toolCard -->
@@ -221,7 +181,7 @@
         <svg viewBox="0 0 24 28" fill="#FBBF24" aria-hidden="true">
           <path d="M14 1 3 16h7l-2 11 12-16h-7l1-10z"/>
         </svg>
-        <div><strong>Lightning fast</strong><span>Stream remuxing in seconds</span></div>
+        <div><strong>Lightning fast</strong><span>Converts in seconds</span></div>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 28" aria-hidden="true">
@@ -229,7 +189,7 @@
           <path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="#F5B400" stroke-width="2.2"/>
           <circle cx="12" cy="17.5" r="1.8" fill="#fff"/>
         </svg>
-        <div><strong>Zero quality loss</strong><span>100% original video frames</span></div>
+        <div><strong>Zero quality loss</strong><span>100% original video quality</span></div>
       </div>
       <div class="feat">
         <svg viewBox="0 0 24 28" fill="none" stroke="#F5B400"
@@ -237,17 +197,17 @@
           <path d="M12 2 3 5.5v7c0 6 4 10 9 13 5-3 9-7 9-13v-7L12 2z"/>
           <path d="M12 2v23c5-3 9-7 9-13v-7L12 2z" fill="#FBBF24" stroke="none"/>
         </svg>
-        <div><strong>No file limits</strong><span>No queues, no watermarks</span></div>
+        <div><strong>No file limits</strong><span>No size caps, no watermarks</span></div>
       </div>
     </section>
 
-    <!-- ===== Deep Insights Section ===== -->
-    <section class="insights" id="insights" aria-label="Understanding MOV to MP4 Conversion">
+    <!-- ===== How It Works Section ===== -->
+    <section class="insights" id="insights" aria-label="How NanoMOV Works">
       <div class="insights-head">
-        <span class="badge">TECHNICAL SPECIFICATIONS</span>
-        <h2>How In-Browser Stream Remuxing Works</h2>
+        <span class="badge">HOW IT WORKS</span>
+        <h2>Fast, Simple, and Private Video Conversion</h2>
         <p class="insights-desc">
-          Why traditional online converters take 10+ minutes while NanoMOV converts your video in seconds.
+          Why NanoMOV converts your videos in seconds without losing quality.
         </p>
       </div>
 
@@ -258,9 +218,9 @@
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
             </svg>
           </div>
-          <h3>1. Stream Remuxing vs. Transcoding</h3>
+          <h3>1. Instant Conversion</h3>
           <p>
-            Standard converters decode every single pixel and re-encode with lossy compression. NanoMOV simply rewrites the container wrapper atoms (`ftyp`, `moov`, `mdat`) and copies raw H.264/AAC packets, finishing in seconds with zero CPU bottleneck.
+            NanoMOV directly copies the original video and audio streams into an MP4 container in seconds. No slow re-encoding, no long waiting.
           </p>
         </div>
 
@@ -271,9 +231,9 @@
               <polygon points="10 8 16 12 10 16 10 8" fill="#E8A400"/>
             </svg>
           </div>
-          <h3>2. Web FastStart (+faststart) Optimization</h3>
+          <h3>2. Universal Compatibility</h3>
           <p>
-            Apple QuickTime files often place the metadata (`moov` box) at the end of the file. NanoMOV relocates `moov` to the beginning of the file, allowing immediate playback on iPhones, Android, Chrome, and social networks without waiting for full download.
+            Your converted MP4 is ready to play smoothly everywhere — on Windows, Mac, iPhone, Android, web browsers, and social media.
           </p>
         </div>
 
@@ -284,9 +244,9 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
           </div>
-          <h3>3. Absolute Privacy &amp; Zero Uploads</h3>
+          <h3>3. Complete Privacy</h3>
           <p>
-            Your video never touches a cloud server. Everything executes locally in your browser memory via WebAssembly and pure client-side binary streams, protecting your private recordings from third-party storage.
+            Your video never gets uploaded to any server or cloud. The entire conversion happens directly on your device inside your browser.
           </p>
         </div>
       </div>

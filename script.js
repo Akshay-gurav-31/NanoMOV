@@ -42,15 +42,6 @@ const readyMeta           = document.getElementById('readyMeta');
 const downloadBtn         = document.getElementById('downloadBtn');
 const cleanAnotherBtn     = document.getElementById('cleanAnotherBtn');
 
-const auditSpeed          = document.getElementById('auditSpeed');
-const auditSpeedStatus    = document.getElementById('auditSpeedStatus');
-const auditFileSize       = document.getElementById('auditFileSize');
-const auditSizeDiff       = document.getElementById('auditSizeDiff');
-const auditQuality        = document.getElementById('auditQuality');
-const auditQualitySub     = document.getElementById('auditQualitySub');
-const auditContainer      = document.getElementById('auditContainer');
-const auditFastStart      = document.getElementById('auditFastStart');
-
 // ── App State ────────────────────────────────────────────────
 let convertedObjectUrl = null;
 let outputFilename     = '';
@@ -348,21 +339,6 @@ async function handleFile(file) {
     readyName.textContent = outputFilename;
     readyMeta.textContent = `MP4 · ${formatBytes(result.blob.size)}`;
     readyPreview.src      = convertedObjectUrl;
-
-    // Populate audit grid
-    auditSpeed.textContent       = `${result.durationSec}s`;
-    auditSpeedStatus.textContent = 'Ultra-Fast Remux';
-    auditSpeedStatus.className   = 'badge-success';
-
-    const sizeDelta = ((result.blob.size - file.size) / file.size) * 100;
-    const sign      = sizeDelta > 0 ? '+' : '';
-    auditFileSize.textContent = `${formatBytes(file.size)} → ${formatBytes(result.blob.size)}`;
-    auditSizeDiff.textContent = `${sign}${sizeDelta.toFixed(1)}% size change`;
-
-    auditQuality.textContent    = '100% Lossless';
-    auditQualitySub.textContent = 'Bit-perfect stream copy';
-    auditContainer.textContent  = 'ISO Base Media MP4';
-    auditFastStart.textContent  = '+faststart web enabled';
 
     showPanel('ready');
 
