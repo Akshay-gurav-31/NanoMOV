@@ -1,20 +1,12 @@
-<p align="center">
-  <img src="logo.png" alt="NanoMOV Logo" width="130">
-</p>
+# <img src="logo.png" alt="NanoMOV Logo" width="48" align="absmiddle"> NanoMOV
 
-<h1 align="center">NanoMOV</h1>
+> Ultra-Fast In-Browser MOV to MP4 Converter  
+> 100% Client-Side · Zero Uploads · No File Size Limits · Instant Results
 
-<p align="center">
-  <strong>Ultra-Fast In-Browser MOV to MP4 Converter</strong><br>
-  100% Client-Side · Zero Uploads · No File Size Limits · Instant Results
-</p>
-
-<p align="center">
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img src="https://img.shields.io/badge/Made%20with-JavaScript-f7df1e?logo=javascript" alt="Made with JS"></a>
-  <img src="https://img.shields.io/badge/Server-None-brightgreen" alt="No Server">
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome">
-</p>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Made with JS](https://img.shields.io/badge/Made%20with-JavaScript-f7df1e?logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![No Server](https://img.shields.io/badge/Server-None-brightgreen)](.)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](.)
 
 ---
 
