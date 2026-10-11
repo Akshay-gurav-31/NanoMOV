@@ -88,6 +88,12 @@ body::after {
   font-weight: 700; font-size: 18px; letter-spacing: -.2px;
   color: var(--ink); text-decoration: none;
 }
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
 .brand svg { width: 24px; height: 24px; }
 
 .nav-right { display: flex; align-items: center; }
