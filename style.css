@@ -597,8 +597,8 @@ footer {
   display: flex; justify-content: space-between; align-items: center;
   padding: 17px 40px 0;
 }
-.foot .brand { font-size: 13.5px; gap: 9px; }
-.foot .brand svg { width: 20px; height: 20px; }
+.foot .brand { font-size: 14px; gap: 6px; }
+.foot .brand .brand-logo { height: 24px; width: auto; }
 
 .foot-right {
   text-align: right; font-size: 9.5px; color: #8A8F98; line-height: 1;
