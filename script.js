@@ -41,6 +41,8 @@ const readyName           = document.getElementById('readyName');
 const readyMeta           = document.getElementById('readyMeta');
 const downloadBtn         = document.getElementById('downloadBtn');
 const cleanAnotherBtn     = document.getElementById('cleanAnotherBtn');
+const renameInput         = document.getElementById('renameInput');
+const renameBtn           = document.getElementById('renameBtn');
 
 // ── App State ────────────────────────────────────────────────
 let convertedObjectUrl = null;
@@ -87,11 +89,47 @@ function reset() {
   activeAbort = true;
   freeConvertedUrl();
   fileInput.value = '';
-  if (readyPreview)  { readyPreview.pause();  readyPreview.src  = ''; }
-  if (procPreview)   { procPreview.pause();   procPreview.src   = ''; procPreview.style.display = 'none'; }
+  if (renameInput)  renameInput.classList.add('hidden');
+  if (readyName)    readyName.classList.remove('hidden');
+  if (readyPreview) { readyPreview.pause();  readyPreview.src  = ''; }
+  if (procPreview)  { procPreview.pause();   procPreview.src   = ''; procPreview.style.display = 'none'; }
   if (procPlaceholderIcon) procPlaceholderIcon.style.display = 'flex';
   setProgress(0);
   showPanel('drop');
+}
+
+/** Enter rename editing mode. */
+function startRename() {
+  if (!renameInput || !readyName) return;
+  const currentBase = outputFilename.replace(/\.mp4$/i, '');
+  renameInput.value = currentBase;
+  readyName.classList.add('hidden');
+  renameInput.classList.remove('hidden');
+  renameInput.focus();
+  renameInput.select();
+}
+
+/** Save the new filename and return to display mode. */
+function saveRename() {
+  if (!renameInput || !readyName) return;
+  if (renameInput.classList.contains('hidden')) return;
+  let val = renameInput.value.trim();
+  if (!val) {
+    val = outputFilename.replace(/\.mp4$/i, '') || 'video';
+  }
+  // Sanitize and ensure clean .mp4 filename
+  val = val.replace(/\.mp4$/i, '');
+  outputFilename = `${val}.mp4`;
+  readyName.textContent = outputFilename;
+  renameInput.classList.add('hidden');
+  readyName.classList.remove('hidden');
+}
+
+/** Cancel rename editing without saving. */
+function cancelRename() {
+  if (!renameInput || !readyName) return;
+  renameInput.classList.add('hidden');
+  readyName.classList.remove('hidden');
 }
 
 /** Display an error message and switch to the error panel. */
@@ -405,3 +443,30 @@ procCancelBtn.addEventListener('click',   reset);
 cleanAnotherBtn.addEventListener('click', reset);
 retryBtn.addEventListener('click',        reset);
 downloadBtn.addEventListener('click',     downloadVideo);
+
+if (renameBtn) {
+  renameBtn.addEventListener('click', () => {
+    if (renameInput && !renameInput.classList.contains('hidden')) {
+      saveRename();
+    } else {
+      startRename();
+    }
+  });
+}
+
+if (readyName) {
+  readyName.addEventListener('click', startRename);
+}
+
+if (renameInput) {
+  renameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveRename();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelRename();
+    }
+  });
+  renameInput.addEventListener('blur', saveRename);
+}
