@@ -1,5 +1,5 @@
 /**
- * CleanMOV – High-Speed Client-Side MOV to MP4 Converter
+ * NanoMOV – High-Speed Client-Side MOV to MP4 Converter
  * ========================================================
  * Architecture:
  * 1. Ultra-Fast Stream Copy Remuxing (Zero Quality Loss, Instant 1-2s conversion).

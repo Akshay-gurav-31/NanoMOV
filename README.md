@@ -1,4 +1,4 @@
-# CleanMOV ⚡
+# NanoMOV ⚡
 
 > **Ultra-Fast In-Browser MOV → MP4 Converter + AI Image Anonymizer**  
 > 100% Client-Side · Zero Uploads · No File Size Limits · Instant Results
@@ -10,27 +10,27 @@
 
 ---
 
-## What is CleanMOV?
+## What is NanoMOV?
 
-CleanMOV is a **free, open-source, fully offline web tool** that runs entirely in your browser. It ships two powerful utilities:
+NanoMOV is a **free, open-source, fully offline web tool** that runs entirely in your browser. It ships two powerful utilities:
 
 | Tool | What it does |
 |---|---|
-| 🎬 **CleanMOV Converter** | Converts `.mov` (QuickTime) to `.mp4` in milliseconds via zero-copy stream remuxing — no re-encoding, no quality loss |
+| 🎬 **NanoMOV Converter** | Converts `.mov` (QuickTime) to `.mp4` in milliseconds via zero-copy stream remuxing — no re-encoding, no quality loss |
 | 🎞️ **Analog Camera Studio** | Strips AI-generation fingerprints from images and re-applies authentic 35mm film grain + real camera EXIF metadata |
 
 No servers. No uploads. No accounts. Everything happens on your device.
 
 ---
 
-## Why is CleanMOV Insanely Fast?
+## Why is NanoMOV Insanely Fast?
 
 Traditional converters upload your video to a server, re-encode every frame (lossy, slow), and put you in a queue.
 
-**CleanMOV uses Stream Copy Remuxing:**
+**NanoMOV uses Stream Copy Remuxing:**
 
 - `.mov` and `.mp4` share the **same underlying H.264/AAC bitstream**
-- CleanMOV simply **rewrites the container header** — no decoding, no encoding
+- NanoMOV simply **rewrites the container header** — no decoding, no encoding
 - Adds **Web FastStart** (`+faststart`) by moving `moov` atom before `mdat`
 - Recalculates all chunk offsets (`stco` / `co64`) for byte-perfect output
 - **Multi-gigabyte support** via `Blob.slice()` zero-copy streaming (never loads full file into RAM)
@@ -41,7 +41,7 @@ Traditional converters upload your video to a server, re-encode every frame (los
 |---|---|---|
 | Online converter (cloud re-encode) | ~10–30 minutes | Lossy |
 | FFmpeg local (`-c copy`) | ~3–5 seconds | None |
-| **CleanMOV (browser)** | **< 1 second** | **0.00% (bit-perfect)** |
+| **NanoMOV (browser)** | **< 1 second** | **0.00% (bit-perfect)** |
 
 ---
 
@@ -69,8 +69,8 @@ Traditional converters upload your video to a server, re-encode every frame (los
 
 ### Open Directly (No Install)
 ```bash
-git clone https://github.com/YOUR_USERNAME/cleanmov.git
-cd cleanmov
+git clone https://github.com/YOUR_USERNAME/NanoMOV.git
+cd NanoMOV
 
 # Windows
 start index.html
