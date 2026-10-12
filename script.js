@@ -88,6 +88,7 @@ function freeConvertedUrl() {
 function reset() {
   activeAbort = true;
   freeConvertedUrl();
+  clearVideoCache();
   fileInput.value = '';
   if (renameInput)  renameInput.classList.add('hidden');
   if (readyName)    readyName.classList.remove('hidden');
@@ -136,6 +137,94 @@ function cancelRename() {
 function showError(message) {
   errorMsg.textContent = message;
   showPanel('error');
+}
+
+// ── IndexedDB Auto-Cache System (24-Hour Expiration) ─────────────
+const DB_NAME       = 'nanomov_cache_db';
+const DB_VERSION    = 1;
+const STORE_NAME    = 'video_cache';
+const CACHE_KEY     = 'last_converted';
+const CACHE_TTL_MS  = 24 * 60 * 60 * 1000; // 24 hours expiry (next day auto-clean)
+
+function openCacheDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) return resolve(null);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+/** Save converted video with timestamp to cache. */
+async function saveVideoToCache(blob, filename) {
+  try {
+    const db = await openCacheDB();
+    if (!db) return;
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.put({
+      id: CACHE_KEY,
+      blob: blob,
+      filename: filename,
+      size: blob.size,
+      timestamp: Date.now()
+    });
+  } catch (err) {
+    console.warn('Cache write failed:', err);
+  }
+}
+
+/** Clear video cache (used on reset or after expiry). */
+async function clearVideoCache() {
+  try {
+    const db = await openCacheDB();
+    if (!db) return;
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(CACHE_KEY);
+  } catch (_) {}
+}
+
+/** Restore converted video from cache if less than 24 hours old. */
+async function restoreVideoFromCache() {
+  try {
+    const db = await openCacheDB();
+    if (!db) return;
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(CACHE_KEY);
+
+    req.onsuccess = () => {
+      const record = req.result;
+      if (!record) return;
+
+      const now = Date.now();
+      const age = now - (record.timestamp || 0);
+
+      // Agar 24 ghante (1 din) se purana hai -> delete cache (clean start)
+      if (age > CACHE_TTL_MS) {
+        clearVideoCache();
+        return;
+      }
+
+      // Valid cached video mila -> restore UI without any glitches
+      outputFilename     = record.filename || 'video.mp4';
+      convertedObjectUrl = URL.createObjectURL(record.blob);
+
+      readyName.textContent = outputFilename;
+      readyMeta.textContent = `MP4 · ${formatBytes(record.size)}`;
+      readyPreview.src      = convertedObjectUrl;
+
+      showPanel('ready');
+    };
+  } catch (err) {
+    console.warn('Cache restore failed:', err);
+  }
 }
 
 // ── Zero-Copy ISOBMFF Remuxer ─────────────────────────────────
@@ -378,6 +467,9 @@ async function handleFile(file) {
     readyMeta.textContent = `MP4 · ${formatBytes(result.blob.size)}`;
     readyPreview.src      = convertedObjectUrl;
 
+    // Cache the converted video with 24hr expiration
+    saveVideoToCache(result.blob, outputFilename);
+
     showPanel('ready');
 
   } catch (err) {
@@ -470,3 +562,8 @@ if (renameInput) {
   });
   renameInput.addEventListener('blur', saveRename);
 }
+
+// ── Restore Cache on Page Load (if < 24 hours old) ───────────
+document.addEventListener('DOMContentLoaded', () => {
+  restoreVideoFromCache();
+});
