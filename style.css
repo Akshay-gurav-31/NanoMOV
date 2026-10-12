@@ -93,6 +93,9 @@ body::after {
   width: auto;
   object-fit: contain;
   display: block;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
 }
 .brand svg { width: 24px; height: 24px; }
 
@@ -126,14 +129,17 @@ body::after {
 
 h1 {
   margin-top: 12px;
-  font-size: 42px; line-height: 1.0;
-  font-weight: 800; letter-spacing: -1.4px;
+  font-size: clamp(24px, 6vw, 42px);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: clamp(-0.4px, -0.03em, -1.4px);
   color: var(--ink);
+  word-break: break-word;
 }
 h1 .accent { color: var(--yellow); }
 h1 .cursor {
   display: inline-block;
-  width: 2px; height: 40px;
+  width: 2px; height: clamp(22px, 5vw, 40px);
   background: var(--yellow);
   vertical-align: -6px; margin-left: 5px;
   animation: blink 1s steps(1) infinite;
@@ -557,7 +563,192 @@ h1 .cursor {
   margin-right: 4px;
 }
 
+/* ---------- Creator Section ---------- */
+.creator-section {
+  max-width: 600px;
+  margin: 40px auto 0;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.creator-inner {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow-sm);
+}
+.creator-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.creator-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.3px;
+  margin-bottom: 18px;
+}
+.creator-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.creator-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.creator-link svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--muted);
+  transition: color .15s;
+}
+.creator-link:hover {
+  background: var(--cream);
+  border-color: var(--yellow-deep);
+  transform: translateY(-1px);
+}
+.creator-link:hover svg { color: var(--yellow-deep); }
+
+/* ---------- Contact Section ---------- */
+.contact-section {
+  max-width: 600px;
+  margin: 24px auto 0;
+  padding: 0 16px;
+  position: relative;
+  z-index: 1;
+}
+.contact-inner {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.contact-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.4px;
+  margin-top: 4px;
+}
+.contact-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.contact-form {
+  margin-top: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cf-row {
+  display: flex;
+  gap: 12px;
+}
+.cf-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cf-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cf-input {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cf-input:focus {
+  border-color: var(--yellow-deep);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, .15);
+}
+.cf-textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+.cf-footer {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.cf-submit {
+  width: 100%;
+  max-width: 220px;
+  height: 38px;
+  font-size: 13px;
+}
+.cf-status {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cf-ok {
+  background: var(--mint);
+  color: var(--green);
+  border: 1px solid var(--mint-border);
+}
+.cf-err {
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+
+@media (max-width: 520px) {
+  .cf-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .cf-submit {
+    max-width: 100%;
+  }
+  .contact-inner {
+    padding: 20px 16px;
+  }
+}
+
 /* ---------- Footer ---------- */
+
 footer {
   max-width: 1256px;
   margin: 21px auto 0;
@@ -591,22 +782,106 @@ footer {
 /* ---------- Utility ---------- */
 .hidden { display: none !important; }
 
-/* ---------- Responsive ---------- */
+/* =========================================================
+   RESPONSIVE — Mobile-first, fluid, cross-platform
+   ========================================================= */
+
+/* Prevent horizontal scroll on all devices */
+html { overflow-x: hidden; }
+body { overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+/* Fluid wrap — never wider than viewport */
+.wrap    { padding: 14px 16px 0; max-width: 100%; box-sizing: border-box; }
+footer   { padding: 0 16px 24px; }
+
+/* Card is naturally fluid */
+.card     { width: min(818px, 100%); }
+.features { width: min(818px, 100%); }
+
+/* ---- Tablet / large phone  (≤ 860px) ---- */
 @media (max-width: 860px) {
-  .nav { padding: 0 16px; }
+  .nav { padding: 0 14px; }
   .nav a.link, .nav .sep { display: none; }
-  .proc { height: auto; flex-direction: column; align-items: stretch; }
-  .proc .thumb { width: 100%; height: 180px; }
-  .ready-top { flex-direction: column; }
-  .ready .thumb { width: 100%; height: 180px; }
-  .actions { position: static; width: 100%; margin-top: 10px; }
+
+  /* Processing card */
+  .proc { flex-direction: column; align-items: stretch; height: auto; }
+  .proc .thumb { width: 100%; height: 200px; }
+
+  /* Ready card */
+  .ready-top { flex-direction: column; align-items: stretch; }
+  .ready .thumb { width: 100%; height: 200px; }
+  .actions { width: 100%; margin-top: 12px; flex-direction: row; gap: 10px; }
+  .actions .btn { flex: 1; }
+
+  /* Features grid */
   .features { grid-template-columns: 1fr 1fr; row-gap: 16px; }
-  .feat::before { display: none; }
+  .feat::before { display: none !important; }
   .feat, .feat:nth-child(n) { padding-left: 4px; }
+
+  /* Insights */
   .insights-grid { grid-template-columns: 1fr; }
+
+  /* Progress bar */
   .bar { width: 100%; }
+
+  /* Footer */
   .foot { flex-direction: column; gap: 12px; padding: 17px 0 0; }
   .foot-right { text-align: center; }
-  h1 { font-size: 34px; }
-  h1 .cursor { height: 32px; }
+}
+
+/* ---- Small phone  (≤ 520px) ---- */
+@media (max-width: 520px) {
+  .wrap   { padding: 10px 12px 0; }
+  footer  { padding: 0 12px env(safe-area-inset-bottom, 20px); }
+
+  .nav { padding: 0 10px; height: 48px; border-radius: 12px; }
+  .brand { font-size: 16px; }
+  .brand-logo { height: 28px !important; }
+  .chip { display: none; }    /* hide "Works offline" chip on tiny screens */
+
+  .hero { padding-top: 14px; }
+  .badge { font-size: 10px; padding: 5px 11px; }
+
+  .card { border-radius: 14px; padding: 10px 12px 12px; }
+
+  /* Drop zone */
+  .drop { min-height: 180px; padding: 18px 14px 16px; }
+  .cloud { width: 52px; height: 52px; }
+  .cloud svg { width: 32px; height: 32px; }
+  .drop h3 { font-size: 15px; }
+
+  /* Processing thumb */
+  .proc .thumb { height: 160px; }
+
+  /* Ready card */
+  .ready { padding: 14px 14px; }
+  .ready .thumb { height: 160px; }
+  .actions { flex-direction: column; }   /* stack buttons on tiny screens */
+  .actions .btn { flex: none; width: 100%; }
+  .fname-input { width: 100%; }
+
+  /* Features — single column on tiny phones */
+  .features { grid-template-columns: 1fr; }
+  .feat { height: auto; padding: 6px 4px !important; }
+
+  /* Insights section */
+  .insights { margin: 36px auto 24px; }
+  .insights-head h2 { font-size: 20px; }
+  .insights-desc { font-size: 12px; }
+  .insight-card { padding: 16px 14px; }
+
+  /* Footer */
+  .foot { padding: 14px 0 0; }
+  .foot .brand { font-size: 13px; }
+  .foot-right { font-size: 9px; }
+  .foot-right small { font-size: 7.5px; }
+}
+
+/* ---- Extra tiny  (≤ 360px, e.g. old Android) ---- */
+@media (max-width: 360px) {
+  .wrap  { padding: 8px 10px 0; }
+  .nav   { padding: 0 8px; border-radius: 10px; }
+  .card  { padding: 8px 10px 10px; }
+  .drop  { min-height: 160px; padding: 14px 10px 12px; }
+  .ready { padding: 12px 10px; }
 }
