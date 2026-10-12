@@ -6,18 +6,14 @@
   <title>NanoMOV – Fast MOV to MP4 Converter</title>
   <meta name="description" content="NanoMOV: Convert MOV to MP4 ultra-fast directly in your browser. Lossless stream remuxing, zero quality loss, 100% private.">
   <link rel="icon" type="image/png" href="logo.png">
-  <!-- Performance & Preconnect -->
+  <!-- Performance: Direct Preconnect for Fonts Domain & CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 
-  <!-- Critical Stylesheet with Fast Preload -->
-  <link rel="preload" href="style.css" as="style">
+  <!-- Critical Stylesheet -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Non-blocking Google Fonts with Native Fallback -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <!-- Non-blocking Google Fonts with Display Swap & Asynchronous Loading -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -98,7 +94,7 @@
             <line x1="10" y1="8" x2="10" y2="8.01"/>
           </svg>
         </div>
-        <h3>Drop a MOV video here</h3>
+        <h2 class="drop-title">Drop a MOV video here</h2>
         <button class="browse" id="browseBtn" type="button">or browse files</button>
         <div class="fmt">MOV &middot; QuickTime (.mov) &middot; MP4</div>
         <div class="stay">
@@ -408,8 +404,7 @@
     </div>
   </footer>
 
-  <!-- Scripts (non-blocking defer) -->
-  <script src="ffmpeg.min.js" defer></script>
+  <!-- App Script (deferred, non-blocking) -->
   <script src="script.js" defer></script>
 
   <!-- Contact Form -->
