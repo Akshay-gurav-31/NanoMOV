@@ -512,23 +512,56 @@ fileInput.addEventListener('change', (e) => {
   if (file) handleFile(file);
 });
 
+// ── Full-Window Drag & Drop with Fullscreen Overlay ─────────
+const dragOverlay = document.getElementById('dragOverlay');
+let dragCounter = 0;
+
+function showDragOverlay() {
+  if (dragOverlay) dragOverlay.classList.add('active');
+  if (dropZone) dropZone.classList.add('drag-over');
+}
+
+function hideDragOverlay() {
+  dragCounter = 0;
+  if (dragOverlay) dragOverlay.classList.remove('active');
+  if (dropZone) dropZone.classList.remove('drag-over');
+}
+
 ['dragenter', 'dragover'].forEach((ev) => {
-  dropZone.addEventListener(ev, (e) => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.add('drag-over');
+  window.addEventListener(ev, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (ev === 'dragenter') dragCounter++;
+    showDragOverlay();
   });
 });
 
-['dragleave', 'drop'].forEach((ev) => {
-  dropZone.addEventListener(ev, (e) => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.remove('drag-over');
-  });
+window.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  dragCounter--;
+  if (dragCounter <= 0) {
+    hideDragOverlay();
+  }
 });
 
-dropZone.addEventListener('drop', (e) => {
-  const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-  if (file) handleFile(file);
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  hideDragOverlay();
+
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    // Agar drop zone hidden ho (ready state ya error), pehle reset karo
+    if (dropZone && dropZone.classList.contains('hidden')) {
+      reset();
+    }
+    // Tool card par scroll karo taaki user ko conversion turant dikhe
+    const card = document.getElementById('toolCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    handleFile(files[0]);
+  }
 });
 
 procCancelBtn.addEventListener('click',   reset);
